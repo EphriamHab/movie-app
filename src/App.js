@@ -57,12 +57,23 @@ const query = "interstellar"
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
    useEffect(()=>{
     async function fetchMovies(){
-      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`)
-      const data = await res.json();
-      setMovies(data.Search)
+      try {
+        setIsLoading(true);
+        const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`)
+        if(!res.ok){
+          throw new Error('Network response was not ok')
+        }
+        const data = await res.json();
+        setMovies(data.Search)
+        setIsLoading(false)
+      } catch (error) {
+        return error;
+      }
+
     }
    fetchMovies();
    },[])
@@ -84,7 +95,7 @@ export default function App() {
           }
         />
         {/* <Box>
-          <MovieList movies={movies} />
+         { isLoading? <Loader/>:<MovieList movies={movies} />}
         </Box>
         <Box>
           <>
@@ -95,6 +106,10 @@ export default function App() {
       </Main>
     </>
   );
+}
+
+function Loader(){
+  return <p className="loader">Loading...</p>
 }
 
 function NavBar({ children }) {
