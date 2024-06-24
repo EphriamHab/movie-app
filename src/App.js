@@ -58,6 +58,7 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
    useEffect(()=>{
     async function fetchMovies(){
@@ -68,12 +69,18 @@ export default function App() {
           throw new Error('Network response was not ok')
         }
         const data = await res.json();
+        if (data.Response === "False") {
+          throw new Error(data.Error);
+        }
         setMovies(data.Search)
-        setIsLoading(false)
+        console.log(data.Search)
+        
       } catch (error) {
-        console.error(error)
-        setIsLoading(false) 
-      }
+        console.error(error.message)
+        setError(error.message)
+     }finally{
+      setIsLoading(false)
+     }
 
     }
    fetchMovies();
@@ -86,7 +93,7 @@ export default function App() {
         <NumResults movies={movies} />
       </NavBar>
       <Main>
-        <Box element={<MovieList movies={movies} />} />
+        {/* <Box element={<MovieList movies={movies} />} />
         <Box
           element={
             <>
@@ -94,16 +101,18 @@ export default function App() {
               <WatchedMoviesList watched={watched} />
             </>
           }
-        />
-        {/* <Box>
-         { isLoading? <Loader/>:<MovieList movies={movies} />}
+        /> */}
+        <Box>
+         { isLoading && <Loader/>}
+         {!isLoading && error && <ErrorMessage message={error}/>}
+         {!isLoading && !error && <MovieList movies={movies} />}
         </Box>
         <Box>
           <>
             <WatchedSummary watched={watched} />
             <WatchedMoviesList watched={watched} />
           </>
-        </Box> */}
+        </Box>
       </Main>
     </>
   );
@@ -113,6 +122,11 @@ function Loader(){
   return <p className="loader">Loading...</p>
 }
 
+function ErrorMessage({message}){
+  return (
+    <p className="error"><span>⛔</span>{message}</p>
+  );
+}
 function NavBar({ children }) {
   return (
     <nav className="nav-bar">
@@ -156,7 +170,7 @@ function Main({ children }) {
   return <main className="main">{children}</main>;
 }
 
-function Box({ element }) {
+function Box({ children }) {
   const [isOpen, setIsOpen1] = useState(true);
 
   return (
@@ -167,16 +181,17 @@ function Box({ element }) {
       >
         {isOpen ? "–" : "+"}
       </button>
-      {isOpen && element}
+      {isOpen && children}
     </div>
   );
 }
 
 function MovieList({ movies }) {
+  console.log("Movies to be displayed: ", movies);
   return (
     <ul className="list">
-      {movies?.map((movie) => (
-        <Movie movie={movie} />
+      {movies?.map((movie, index) => (
+        <Movie key={movie.imdbID} movie={movie} />
       ))}
     </ul>
   );
