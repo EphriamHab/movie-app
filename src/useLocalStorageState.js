@@ -10,4 +10,6 @@ export function useLocalStorageState(intialState, key){
         localStorage.setItem(key,JSON.stringify(value))
 
       },[value, setValue, key])
+
+      return [value, setValue]
 }
